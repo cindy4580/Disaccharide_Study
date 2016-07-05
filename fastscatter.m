@@ -20,7 +20,7 @@ function h=fastscatter(X,Y,C,varargin)
 
 
 marker='.';
-if length(varargin)>0
+if isempty(varargin)
 	if length(varargin{1})==1
     	marker=varargin{1};varargin(1)=[];
 	end
