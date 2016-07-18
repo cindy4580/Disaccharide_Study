@@ -24,24 +24,24 @@ if nargin == 0
 end
 if nargin < 6
 	error('TooFewInputs');
-elseif nargin < 7
-    rep = M;								% Number of data sets generated
-    if length(M) == 1
-        rep = 1 : M;
-    end
-    if size(I,1) ~= K
-        error('ClusterCentersMismatchWithNumber');
-    end
-elseif nargin < 8
+elseif nargin > 6
 	L = varargin{1};
-elseif nargin < 9
+elseif nargin > 7
 	s = varargin{2};
-elseif nargin < 10
+elseif nargin > 8
     C = varargin{3};
 end
 
-[XX,YY] = meshgrid(0:D:(360-D),0:D:(360-D));
-Temp = vmm_ang2rad([XX(:) YY(:)]);
+rep = M;                                    % Number of data sets generated
+if length(M) == 1
+    rep = 1 : M;
+end
+if size(I,1) ~= K
+    error('ClusterCentersMismatchWithNumber');
+end
+
+% [XX,YY] = meshgrid(0:D:(360-D),0:D:(360-D));
+% Temp = vmm_ang2rad([XX(:) YY(:)]);
 
 % Inital parameters
 % Means                                 			% Randians in [-pi, pi]
@@ -56,89 +56,107 @@ MP = mat2cell(Mu,ones(1,N));                    % Parallelization of array
    
 % Kappa	   % Fixed
 Kappa = 10;
+kappa(1) = {repmat(Kappa,1,2)};
 kappa(2) = {repmat(Kappa,2,2)};
 kappa(3) = {repmat(Kappa,3,2)};
 kappa(4) = {repmat(Kappa,4,2)};
 kappa(5) = {repmat(Kappa,5,2)};
 kappa(6) = {repmat(Kappa,6,2)};
+kappa(7) = {repmat(Kappa,7,2)};
 
 % Lambda    % Fixed
+lambda(1) = {ones(1,1)};
 lambda(2) = {ones(2,1)};
 lambda(3) = {ones(3,1)};
 lambda(4) = {ones(4,1)};
 lambda(5) = {ones(5,1)};
 lambda(6) = {ones(6,1)};
+lambda(7) = {ones(7,1)};
 
 % Results
 dir   = strcat('~/Data/dimer/',name,'/');
 Table = cell(N,5,K);                                % Algorithm Performance
 Param = cell(N,K+1,6*K);                         % Parameters Predicted(PP)
-Diff  = cell(N,360/D,360/D * (K-1));                    % Energy difference
+Diff  = cell(N,360/D,360/D * K);                    % Energy difference
 %% Data load
 dir1    = strcat('~/Data/dimer/',name,'/density/');
-dir2    = strcat('~/Data/dimer/',name,'/ener/');
+%dir2    = strcat('~/Data/dimer/',name,'/ener/');
 seed	= load('~/Data/dimer/seed1.dat');
 
 for j 	= rep
 	
 	f	= strcat(dir1,name,'.',num2str(seed(j)),'.d.dat');
-	e   = strcat(dir2,name,'.wt',num2str(D),'.',num2str(seed(j)),'.dat');
+	%e   = strcat(dir2,name,'.wt',num2str(D),'.',num2str(seed(j)),'.dat');
 	A2M = load(f);
-	Ene = flipud(load(e));
+	%Ene = flipud(load(e));
     
     % Select every Lth point in radians [-pi, pi]
 	A1	= vmm_ang2rad(A2M(1:L:end,2:3));   
 	%Ene(Ene(:) == 100) = 0;
-	Ene(Ene(:) == 100) = NaN;
-	prob = exp(Ene/(R*T))/D^2;
+	%Ene(Ene(:) == 100) = NaN;
+	%prob = exp(Ene/(R*T))/D^2;
     %prob(prob(:) == 1/D^2) = 0;
     
-    matlabpool(3)    
-    parfor r = 1 : N                                         % Repeats loop
-
+    %matlabpool(3)
+    
+    %parfor r = 1 : N                                         % Repeats loop
+    for r = 1 : N
         Mu_tmp = vmm_ang2rad(reshape(reshape(MP{r},[ 1 2 size(MP{r},2)/2]),...
             [ 2 size(MP{r},2)/2])');
         
         % Loop for different number of components
-        for k = 2 : K 
+        for k = 1 : K 
             
             S = struct('Mu',Mu_tmp(1:k,:),'Kappa',kappa{k},...
                 'Lambda',lambda{k});
             options = statset('MaxIter',500,'TolFun',1e-5);
             tic
             vmm = fitvmmdist(A1,k,'Options',options,'Start',S,...
-                'Cortype','Sine');
+               'Cortype','Sine');
             toc
 
             % Data collection for parallel computation
             if vmm.Converged
 
-                Table{r}(:,k-1) = [vmm.Ncomponents vmm.AIC vmm.BIC ...
+                Table{r}(:,k) = [vmm.Ncomponents vmm.AIC vmm.BIC ...
                                vmm.Converged vmm.Iters]';
                             
-                Param{r}(1,6*(k-1)-5 : 6*(k-1)) = vmm.Ncomponents;
-                Param{r}(2:size(vmm.Mu,1)+1,6*(k-1)-5 : 6*(k-1)) = ...
+                Param{r}(1,6*k-5 : 6*k) = vmm.Ncomponents;
+                Param{r}(2:size(vmm.Mu,1)+1,6*k-5 : 6*k) = ...
                 [vmm_rad2ang(vmm.Mu) vmm.Pcomponents' vmm.Kappa vmm.Lambda];
                             
                 % Predicted pdf if algorithm converges
-                z = pdf(Temp,vmm);
-                z = reshape(z,360/D,360/D);
-                d = prob - z/(sum(z(:))*D^2);
-
-                Diff{r}(:,(k-2)*360/D + 1 : (k - 1)*360/D) = d;
+%                 z = pdf(Temp,vmm);
+%                 z = reshape(z,360/D,360/D);
+%                 d = prob - z/(sum(z(:))*D^2);
+% 
+%                 Diff{r}(:,(k-1)*360/D + 1 : (k)*360/D) = d;
             end
             
         end % Components
     end % Repeats
     
     % Write to files
+    if L == 1
+        pfile = strcat(dir,name,'_','P_',num2str(N),'_',...
+                num2str(seed(j)),'.txt');
+        tfile = strcat(dir,name,'_','T_',num2str(N),'_',...
+                num2str(seed(j)),'.txt');
+        dfile = strcat(dir,name,'_','D_',num2str(N),'_',...
+                num2str(seed(j)),'.txt');
+    else
+       pfile = strcat(dir,name,'_','P_',num2str(N),'_',...
+                num2str(seed(j)),num2str(L),'.txt');
+       tfile = strcat(dir,name,'_','T_',num2str(N),'_',...
+                num2str(seed(j)),num2str(L),'.txt');
+       dfile = strcat(dir,name,'_','D_',num2str(N),'_',...
+                num2str(seed(j)),num2str(L),'.txt');
+    end
+    
     for ii = 1 :N
-        dlmwrite(strcat(dir,name,'_','T_',num2str(N),'_',num2str(seed(j)),'.txt'),...
-            Table{ii},'-append','delimiter','\t');        
-        dlmwrite(strcat(dir,name,'_','P_',num2str(N),'_',num2str(seed(j)),'.txt'), ...
-            Param{ii},'-append','delimiter','\t');
-        dlmwrite(strcat(dir,name,'_','D_',num2str(N),'_',num2str(seed(j)),'.txt'),...
-            Diff{ii},'-append','delimiter','\t');
+            dlmwrite(tfile,Table{ii},'-append','delimiter','\t');        
+            dlmwrite(pfile,Param{ii},'-append','delimiter','\t');
+%             dlmwrite(dfile,Diff{ii},'-append','delimiter','\t');
     end
     matlabpool close;
 end % Seed
