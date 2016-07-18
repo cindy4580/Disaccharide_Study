@@ -97,10 +97,10 @@ for j 	= rep
 	%prob = exp(Ene/(R*T))/D^2;
     %prob(prob(:) == 1/D^2) = 0;
     
-    %matlabpool(3)
+    matlabpool(3)
     
-    %parfor r = 1 : N                                         % Repeats loop
-    for r = 1 : N
+    parfor r = 1 : N                                         % Repeats loop
+
         Mu_tmp = vmm_ang2rad(reshape(reshape(MP{r},[ 1 2 size(MP{r},2)/2]),...
             [ 2 size(MP{r},2)/2])');
         
