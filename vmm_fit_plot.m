@@ -32,11 +32,9 @@ seed = load('~/Data/dimer/seed1.dat');
 dir  = strcat('~/Data/dimer/',name,'/');
 fdir = strcat(dir,'density/');
 
-gdir = strcat(dir,'GaussianMixture/');
-vdir = strcat(dir,'vonMiseMixture/');
-
 % Load files
 if L == 1
+    %f   = strcat(fdir,name,'.std.300.',num2str(seed(S)),'.dat');
     f   = strcat(fdir,name,'.',num2str(seed(S)),'.d.dat');
     p   = strcat(dir,name,'_P_',num2str(N),'_',num2str(seed(S)),'.txt');
     t   = strcat(dir,name,'_T_',num2str(N),'_',num2str(seed(S)),'.txt');
@@ -56,9 +54,9 @@ P    = load(p);
 T    = load(t);
 %D1   = load(d);
 R    = size(T,1)/N;
-
+scrsz   = get(groot,'ScreenSize');
 %% AIC/BIC trends
-figure(1)
+hp1=figure(1);
 for i = 1 : N
     if ~all(T((i-1)*R + 4,:))
         T((i-1)*R+2 : i*R-2, T((i-1)*R+4,:) == 0) = NaN;
@@ -75,6 +73,9 @@ end
 legend('AIC','BIC');
 title('von Mise Mixture model fitting performance','FontSize',14);
 xlim([1 K]);  xlabel('Number of fitted clusters');
+set(hp1,'Position',[scrsz(3) 1 scrsz(3) scrsz(3)])
+ax.XTick = 1 : K;
+print(strcat(dir,'FittingPerformance_seed_',num2str(seed(S))),'-dpng');
 %% Scatter plot reproduction by von Mises Mixture Model
 
 %%% Lacking consistent colorbar across all subplots %%%
@@ -112,7 +113,7 @@ xlim([1 K]);  xlabel('Number of fitted clusters');
 % end
 %% Scatter plot with pdf contour
 for iii = 1 : N
-    figure(iii + N +1)
+    hp2 = figure(iii + N +1);
     tmp = P((iii - 1) * (K+1) + 1 : iii*(K+1),:);
     [XX,YY] = meshgrid(0:D:(360-D),0:D:(360-D));
     Temp = vmm_ang2rad([XX(:) YY(:)]);
@@ -132,7 +133,7 @@ for iii = 1 : N
                       'markerfacecolor',[0.6 0.6 0.6],...
                       'markeredgecolor',[0.6 0.6 0.6]);   
             hold on;    colormap jet;
-            contour(XX,YY,z,12); 
+            contour(XX,YY,z,15); 
             scatter(tmp(2:j+1,(j-1)*6+1),tmp(2:j+1,(j-1)*6+2),...
                           'k+','linewidth',1.5);
             text(xpos,ypos,strcat(num2str(j),' components'),...
@@ -149,12 +150,14 @@ for iii = 1 : N
     
     h = suptitle(strcat(name,': von Mises Mixture Model contour'));
     set(h,'interpreter','none');
-    %print(strcat('vMMcontour',num2str(iii)),'-depsc2');
+    set(hp2,'Position',[scrsz(3) 1 scrsz(3) scrsz(3)])
+    print(strcat(dir,'vMMcontour_',num2str(seed(S)),'_',num2str(iii)),...
+        '-dpng');
 end % Repeats
 %% Scatter plot for component centers
 m = ['*','o','^','s','p','d','+'];
 
-figure(2*N+2)
+hp3=figure(2*N+2);
 for l = 1 : N
     tmp = P((l - 1) * (K+1) + 1 : l*(K+1),:);
         for ll = 1 : K         
@@ -169,8 +172,19 @@ end
 h = title(strcat(name,': von Mises Mixture Model centers'));
 set(h,'interpreter','none');
 x = xlim;   y = ylim;
+if x(:,2) > 360
+    x(:,2) = 360;
+    xlim(x);
+end
 
-figure(2*N + 3)
+if y(:,2) > 360
+    y(:,2) = 360;
+    ylim(y);
+end
+set(hp3,'Position',[scrsz(3) 1 scrsz(3) scrsz(3)])
+print(strcat(dir,'CenterScatter_',num2str(seed(S))),'-dpng');
+
+hp4=figure(2*N + 3);
 
 for ll = 1 : K
     subplot(2,ceil(K/2),ll)
@@ -186,6 +200,8 @@ for ll = 1 : K
 end
 h = suptitle(strcat(name,': von Mises Mixture Model Centers'));
 set(h,'interpreter','none');
+set(hp4,'Position',[scrsz(3) 1 scrsz(3) scrsz(3)])
+print(strcat(dir,'CenterScatterVsCluster_',num2str(seed(S))),'-dpng');
 hold off;
 
 %% Stacked bar plot for mixing weights
@@ -198,7 +214,7 @@ temp(1: K + 1 : end) = [ ];
 A   = reshape(temp,[],K);
 %fn  = strcat(name,'_WStack_',num2str(seed(S)),'.txt');
 
-figure(2*N+4)
+hp5=figure(2*N+4);
 for k = 2 : K
     B = reshape(A(:,k),K,[]);
     B = B(1:k,:)';
@@ -206,8 +222,12 @@ for k = 2 : K
     subplot(2,ceil((K-1)/2),k-1)
     bar(B,'stacked')
     title(strcat(num2str(k),' components'));
+    ylim([0 1.1])
 end
-
+h = suptitle(strcat(name,': von Mises Mixture Model Weights'));
+set(h,'interpreter','none');
+set(hp5,'Position',[scrsz(3) 1 scrsz(3) scrsz(3)])
+print(strcat(dir,'StackedWeights_',num2str(seed(S))),'-dpng');
 %% Initial guesses and fitting results distance
 % Here we use euclidean distance first
 rng(r);
@@ -219,7 +239,7 @@ for i = 1 : K
 end    
 MD = zeros(sum(1:K),N);                                 % Distance matrix  
 for i =  1 : N
-    figure(2*N+ 5 + i)
+    hp6 = figure(2*N+ 5 + i);
     for l = 1 : K
         subplot(2,ceil(K/2),l)
         tmp = [Mu(i,1:2:end)' Mu(i,2:2:end)'];
@@ -242,11 +262,17 @@ for i =  1 : N
         end
     end
     hold off;
+    set(hp6,'Position',[scrsz(3) 1 scrsz(3) scrsz(3)])
+    print(strcat(dir,'Travelguess_',num2str(seed(S)),'_',num2str(i)),...
+        '-dpng');
+    h = suptitle(strcat(name,': Distance from Initial guesses: rep# ',...
+                        num2str(i)));
+    set(h,'interpreter','none');
 end
 %% Center and Weights indicator plot
 mm = ['k','b','g','y','m','r'];
 for i = 1 : N
-    figure(3*N + 3 + K + i)
+    hp7 = figure(3*N + 3 + K + i);
     for l = 1 : K
         subplot(2,ceil(K/2),l)
         tmp = P((i-1) * (K+1) + 2 : (i-1) * (K+1) + (l + 1),  ...
@@ -269,6 +295,11 @@ for i = 1 : N
             ylim(y);xlim(x); box on;
         end
     end
+    set(hp7,'Position',[scrsz(3) 1 scrsz(3) scrsz(3)])
+    h = suptitle(strcat(name,': von Mises Mixture Model Weights'));
+    set(h,'interpreter','none');
+    print(strcat(dir,'CenterWeights_',num2str(seed(S)),'_',num2str(i)),...
+        '-dpng');
 end
 
 %% Differences between pdfs

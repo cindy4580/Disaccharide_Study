@@ -12,6 +12,7 @@ function [ ] = glylinkage(file,S,flag)
 %       flag  - file format options:
 %               1 - plot w/o omega
 %               0 - plot w/  omega
+%
 % Copy-left: Cindy Lee,2014
 clc
 str		= regexp(file,'\.','split'); name = char(str(1));		% Disaccharide Name
@@ -120,7 +121,7 @@ if flag
         plot(dot(i,2),dot(i,3),'+','color',color(i,:));
 	end % for
 	grid on;	box on;
-	xlabel('\phi(degree)','Fontsize',12);	suptitle(T);    % No other input arguments allowed
+	xlabel('\phi(degree)','Fontsize',12);	suptitle(T);    
 	hold off;	print(rn,'-depsc2');
 	%% Data Collection
 	denh = hist(d,dbin);
@@ -186,7 +187,7 @@ else
         plot(dot(i,2),dot(i,3),'+','color',color(i,:));
     end % for
 	grid on;	box on;
-	xlabel('\phi(degree)','Fontsize',12);	suptitle(T1);		% No more input arguments allowed
+	xlabel('\phi(degree)','Fontsize',12);	suptitle(T1);		
 	hold off;	print(fn1,'-depsc2');
 	figure(2)
 	h22  = subplot(2,2,2,'Position',[0.3,0.75,0.484,0.1]);
@@ -209,7 +210,7 @@ else
         plot(dot(i,4),dot(i,3),'+','color',color(i,:));
     end % for
 	grid on;	box on;	
-	xlabel('\omega(degree)','Fontsize',12);	suptitle(T2); % No other input arguments allowed
+	xlabel('\omega(degree)','Fontsize',12);	suptitle(T2); 
 	hold off;	print(fn2,'-depsc2');
 	figure(3)
 	fscatter3(x,y,w,d);		title(T);

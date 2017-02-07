@@ -1,4 +1,4 @@
-function [ ] = glylinkage3(file,S,type)
+function [ ] = glylinkage_tri(file,S,type)
 % Glycosidic linkage --> Ramachandran plot (phi,psi,omega) for DISACCHARIDES
 % Scatter plot with color indicating data density
 % INPUT VARIABLES:

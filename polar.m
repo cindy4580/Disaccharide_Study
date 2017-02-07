@@ -89,7 +89,7 @@ if ~hold_state
     maxrho = max(max(arho(arho ~= Inf),1));  % Keep tracking this value as the size of the figure
     hhh = line([-maxrho, -maxrho, maxrho, maxrho], [-maxrho, maxrho, maxrho, -maxrho], 'Parent', cax);
     set(cax, 'DataAspectRatio', [1, 1, 1], 'PlotBoxAspectRatioMode', 'auto');
-    v = [-0.5 0.5 -0.5 0.5];
+    v = [-0.8 0.8 -0.8 0.8];
     ticks = sum(get(cax, 'YTick') >= 0);
     delete(hhh);
     % check radial limits and ticks
@@ -122,7 +122,7 @@ if ~hold_state
 	s82 = sin(82 * pi / 180);
 	rinc = (rmax - rmin) / rticks;
 	for i = (rmin + rinc) : rinc : rmax
-		hhh = line(xunit * i, yunit * i, 'LineStyle', ls, 'Color', tc, 'LineWidth', 1, ...
+		hhh = line(xunit * i, yunit * i, 'LineStyle', ':', 'Color', tc, 'LineWidth', 1, ...
 				'HandleVisibility', 'off', 'Parent', cax);
 		text((i + rinc / 20) * c82, (i + rinc / 20) * s82, ...
                 ['  ' num2str(i)], 'VerticalAlignment', 'bottom', ...
@@ -135,7 +135,7 @@ if ~hold_state
 	snt = sin(th);
 	cs = [-cst; cst];
 	sn = [-snt; snt];
-	line(rmax * cs, rmax * sn, 'LineStyle', ls, 'Color', tc, 'LineWidth', 1, ...
+	line(rmax * cs, rmax * sn, 'LineStyle', ':', 'Color', tc, 'LineWidth', 0.5, ...
             'HandleVisibility', 'off', 'Parent', cax);
 	% annotate spokes in degrees
 	rt = 1.1 * rmax;
