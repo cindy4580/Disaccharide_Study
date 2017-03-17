@@ -7,7 +7,8 @@ function [ ] = enermini(file,S,stepsize,sim,flag)
 %                  2nd ~    column - phi,psi,omega
 %                  last     column - free energy
 %                  * name without its directory
-%       S        - the number of seeds used to generate energy landscapes ( * 10^4)
+%       S        - the number of seeds used to generate energy landscapes 
+%                  ( * 10^4)
 %       stepsize - the length of the energy box
 %       sim      - string for specific seed combination 
 %		flag	 - 1: linkage w/o extra omega
@@ -29,7 +30,7 @@ zmax	= 360;	zmin = 0;
 mini	= [dir,num2str(S),'s.',num2str(stepsize),'.',sim,'.mini.mat'];
 %% Computation
 if flag 
-	[XMAX,IMAX,XMIN,IMIN] = extrema2(M);
+	[~,~,XMIN,IMIN] = extrema2(M);
 	m  = size(IMIN,1);
 	I  = zeros(m,2);      % to store the according (i,j) position
 	F  = zeros(m,2);      % to store the according energy box 
@@ -68,7 +69,7 @@ else
 	for k = 1 : dim
 		M3(:,:,k) =  M( ((k - 1) * dim + 1 ) : k * dim, :);	
 	end
-	[XMAX,IMAX,XMIN,IMIN] = MinimaMaxima3D(M3,1,1);
+	[~,~,XMIN,IMIN] = MinimaMaxima3D(M3,1,1);
 	m  = size(IMIN,1);
 	F  = zeros(m,3);      % to store the real energy box 
 	% Get real positions

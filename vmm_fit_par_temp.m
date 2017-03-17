@@ -1,64 +1,54 @@
-function [ ] = vmm_fit_par3D(name,N,D,K,M,I,varargin) 
-%% von Mises Mixture fitting and measuring the pdf difference 
-%  Initial mean directions are randomly flexible within 10 degrees; Kappa
-%  and Lambda are fixed at 10 and 1 respectively
+function [ ] = vmm_fit_par_temp(name,N,K,M,I,varargin) 
+%% von Mises Mixture fitting starter script
+%  Initial mean directions are randomly selected within 10 degrees of the
+%  inputs; Kappa and Lambda initial guesses are fixed for all components at 
+%  10 and 1 respectively
 %
 %  Inputs:
-%			N   -- Repeated fit models with different initial guesses
-%			D   -- Resolution of simulation energy/pdf matrix
+%			N   -- Repeated fit procedures with different initial guesses
 %			K   -- Number of components at most
 %           M   -- Different samples from MC simulations
 %           I   -- Initial mean directions from energy surface local minima
 %           V1  -- L: Resampling factor
-%           V2  -- s: Random number seed to generate initial guesses
-%           V3  -- C: Cutoff for pdf comparison
+%           V2  -- s: Random number seed to generate random initial guesses
 %
 %  NOTE: This script is modified to enable parallel computing on a multi- 
 %		 core cpu with MATLAB 2013b therefore contains outdated built-in
 %		 functions
 
 %% Initialization
-R 	= -1.9872041 * 10^(-3);                            % Ideal gas constant
-T 	= 300;                                                    % Temperature
-C 	= 4.12;											  % >=100 dots in a box
-s   = 32; 						   % Random number seed for initial guesses
 L   = 1;
+s   = 32;
+
 % Parse inputs				
 if nargin == 0
 	return;
 end
-if nargin < 6
+if nargin < 5
 	error('TooFewInputs');
-elseif nargin > 8
-    C = varargin{3};
 elseif nargin > 7
-	A2M = varargin{2};
+	s = varargin{2};
     L = varargin{1};
 elseif nargin > 6
     L = varargin{1};
 end
 
 if size(I,1) ~= K
-    error('ClusterCentersMismatchWithNumber');
+    error('ClusterCentersMismatchWithClusterNumber');
 end
-
-% [XX,YY] = meshgrid(0:D:(360-D),0:D:(360-D));
-% Temp = vmm_ang2rad([XX(:) YY(:)]);
 
 % Inital parameters
 rng(s);
-p       = size(I,2);
+p       = size(I,2);                                       % Data Dimension
 Kap     = 10;
 Mu      = cell(K,N,p);
 tmp_M   = zeros(K*N,p);
 MP      = cell(N,K,p);
 
 for i   = 1 : K
-    
     for j   = 1 : p
         Mu{i}(:,j) = randi([I(i,j)-5    I(i,j)+5],N,1);
     end
-    
     tmp_M((i - 1) * N + 1 : i * N,:) = Mu{i};     
 end
 
@@ -73,36 +63,22 @@ if p == 3
     lambda = temp + tril(temp',-1);
 end
 
-% Results
-dir   = strcat('~/Data/dimer/',name,'/');
-Table = cell(N,5,K);                                % Algorithm Performance
-Param = cell(N,K+1,(p+1)*(p+2)*K/2);                   % Parameters Predicted
-%Diff  = cell(N,360/D,360/D * K);                       % Energy difference
-%% Data load
-dir1    = strcat('~/Data/dimer/',name,'/density/');
-%dir2    = strcat('~/Data/dimer/',name,'/ener/');
+% Directories and results
+dir     = strcat('~/Data/dimer/',name,'/');
+dir1    = strcat(dir,'density/');
+Table   = cell(N,5,K);                              % Algorithm Performance
+Param   = cell(N,K+1,(p+1)*(p+2)*K/2);               % Parameters Predicted
+%% Data process
 seed	= load('~/Data/dimer/seed1.dat');
-
-for j 	= M
-	
+for j 	= M	
 	f	= strcat(dir1,name,'.',num2str(seed(j)),'.d.dat');
-    %f  = strcat(dir,name,'.1.dmatrix.5.dat');
-	%e  = strcat(dir2,name,'.wt',num2str(D),'.',num2str(seed(j)),'.dat');
 	A2M = load(f);
-	%En = flipud(load(e));
     
     % Select every Lth point in radians [-pi, pi]
-	A1	= vmm_ang2rad(A2M(1:L:end,2:p+1));   
-	%Ene(Ene(:) == 100) = 0;
-	%Ene(Ene(:) == 100) = NaN;
-	%prob = exp(Ene/(R*T))/D^2;
-    %prob(prob(:) == 1/D^2) = 0;
+	A1	= vmm_ang2rad(A2M(1:L:end,2:p+1));
     
-    matlabpool(3)
-    
+    matlabpool(3)    
     parfor r = 1 : N                                         % Repeats loop
-    %for r = 1 : N
-
         Mu_tmp = vmm_ang2rad(MP{r});
         
         for k = 1: K
@@ -112,7 +88,7 @@ for j 	= M
             elseif p < 3
                 S = struct('Mu', Mu_tmp(1:k,:), 'Kappa',...
                     repmat(repmat(Kap,1,p),k,1), 'Lambda',ones(k,1));
-            elseif p < 4
+        elseif p < 4
                 S = struct('Mu', Mu_tmp(1:k,:), 'Kappa',...
                     repmat(repmat(Kap,1,p),k,1), 'Lambda',...
                     repmat(lambda,[1 1 k]));
@@ -123,7 +99,8 @@ for j 	= M
             options = statset('MaxIter',500,'TolFun',1e-5);
             tic
             vmm = fitvmmdist( A1, k,'Options', options,'Start', S, ...
-                             'Cortype','Sine'); toc
+                             'Cortype','Sine'); 
+            toc
             
             if vmm.Converged
                 Table{r}(:,k) = [vmm.Ncomponents vmm.AIC vmm.BIC ...
@@ -145,13 +122,6 @@ for j 	= M
                         nonzeros(triu(vmm.Lambda(:,:,jj)))';
                     end
                 end
-                            
-                % Predicted pdf if algorithm converges
-%                 z = pdf(Temp,vmm);
-%                 z = reshape(z,360/D,360/D);12BA_NM_T_9_cmb.txt
-%                 d = prob - z/(sum(z(:))*D^2);
-% 
-%                 Diff{r}(:,(k-1)*360/D + 1 : (k)*360/D) = d;
             else
                 Table{r}(:,k) = zeros(5,1);
                 Param{r}(1:K+1,(p+1)*(p+2)/2 *(k-1)+1:...
@@ -165,16 +135,11 @@ for j 	= M
             num2str(seed(j)),'.txt');
     tfile = strcat(dir,name,'_','T_',num2str(N),'_',...
             num2str(seed(j)),'.txt');
-    dfile = strcat(dir,name,'_','D_',num2str(N),'_',...
-            num2str(seed(j)),'.txt');
-    
+   
     for ii = 1 :N
             dlmwrite(tfile,Table{ii},'-append','delimiter','\t');        
             dlmwrite(pfile,Param{ii},'-append','delimiter','\t');
-%           dlmwrite(dfile,Diff{ii},'-append','delimiter','\t');
-    end
-    
-    matlabpool close;
-    
+    end    
+    matlabpool close;    
 end % Seed
 
