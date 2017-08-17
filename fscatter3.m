@@ -50,8 +50,10 @@ function [h] = fscatter3(X,Y,Z,C,cmap);
 
 % avoid too many calculations
 
-mins = min(C);
-maxs = max(C);
+% mins = min(C);
+% maxs = max(C);
+mins = 0;
+maxs = 1;
 minz = min(Z);
 maxz = max(Z);
 minx = min(X);
@@ -83,7 +85,8 @@ for j = 1:numclass
     end
   end  
 end
-caxis([min(C) max(C)])
+%caxis([min(C) max(C)])
+caxis([ 0 1]);
 axis equal;rotate3d on;view(3);
 box on
 hcb = colorbar('location','east','YAxisLocation','right');

@@ -24,7 +24,7 @@ if flag
 	dlmwrite(dm,data1,'delimiter','\t','newline','Unix');
 else 
 	w		= M(1:L*1e05, W-1);
-	dd		= mydensity([x y w],'circular3',radius);		% Volume density
+	dd		= mydensity([x y w],'circular',radius);		   % Volume density
 	maxd	= max(dd);	nd	= dd/maxd;
 	dd1		= mydensity([x y],'circular',radius);
 	maxd1	= max(dd1)	

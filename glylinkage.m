@@ -144,9 +144,9 @@ else
 			T1 = 'Disaccharide: \alphaMannose-\alpha(1,6)-\alphaMannose (\phi,\psi)';
 			T2 = 'Disaccharide: \alphaMannose-\alpha(1,6)-\alphaMannose (\omega,\psi)';
 		case '16BB_NM'			% 4
-			T  = 'Disaccharide: \betaGlcNAc-\beta(1,6)-\betaMannose';
-			T1 = 'Disaccharide: \betaGlcNAc-\beta(1,6)-\betaMannose (\phi,\psi)';
-			T2 = 'Disaccharide: \betaGlcNAc-\beta(1,6)-\betaMannose (\omega,\psi)';
+			T  = 'Disaccharide: \betaGlcNAc-\beta(1,6)-\alphaMannose';
+			T1 = 'Disaccharide: \betaGlcNAc-\beta(1,6)-\alphaMannose (\phi,\psi)';
+			T2 = 'Disaccharide: \betaGlcNAc-\beta(1,6)-\alphaMannose (\omega,\psi)';
 		case '16BB_NG'			% 5
 			T  = 'Disaccharide: \betaGlcNAc-\beta(1,6)-\betaGalactose';
 			T1 = 'Disaccharide: \betaGlcNAc-\beta(1,6)-\betaGalactose (\phi,\psi)';
