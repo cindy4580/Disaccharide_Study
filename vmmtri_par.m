@@ -14,6 +14,7 @@ function [  ] = vmmtri_par(name,N,K1,K2,M,P1,P2,type,varargin)
 %           Type -- File format options
 %                   11 - two linkages w/o omega
 %                   10 - the second linkage w/ omega
+%           eq   -- Start point after equalibrium
 %           V1   -- s: Random number seed to generate initial guesses
 %           V2   -- L: Resampling factor
 %
@@ -121,7 +122,7 @@ for j   = M
     f   = strcat(dir,'density/',name,'.',num2str(sd(j)),'.d.dat');
     TM  = load(f);
     % Select every Lth point in radians [-pi, pi]
-    A	= vmm_ang2rad(TM(1:L:end,2:3));   
+    A	= vmm_ang2rad(TM(eq:L:end,2:3));   
     if strcmp(type,'11')
         B   = vmm_ang2rad(TM(1:L:end,4:5));
     elseif strcmp(type,'10')
@@ -132,37 +133,37 @@ for j   = M
     clear TM;
     options = statset('MaxIter',500,'TolFun',1e-5);
     
-    % matlabpool(3)
-    for r = 1: N
+    matlabpool(3)
+    parfor r = 1: N
         Param{r} = zeros(max(max(K1),max(K2))+1,in1*max(K1)+in2*max(K2));
         % Loop for Non-reducing end angle fitting
-%         for k = K1
-%             if any(Mu1{k})
-%                 S_nr = struct('Mu',vmm_ang2rad(reshape(reshape(Mu1{k}(r,:),...
-%                     [1 2 k]),[2 k])'),'Kappa',Ka1{k},'Lambda',L1{k});
-%                 tic
-%                 vmm_nr = fitvmmdist(A,k,'Options',options,'Start',S_nr,...
-%                   'Cortype','Sine');
-%                 toc
-%             else
-%                 error('No convergent initial guesses in disaccharides');
-%             end
-%             Param{r}(1,in1*(k-1) + 1 : in1*k) = vmm_nr.Ncomponents;  
-%             if vmm_nr.Converged
-%                 Table{r}(:,k)= [vmm_nr.Ncomponents vmm_nr.AIC ...
-%                                 vmm_nr.BIC vmm_nr.Converged vmm_nr.Iters]';
-%                     
-%                 Param{r}(2:size(vmm_nr.Mu,1)+1, (k-1)*in1+1 : k*in1) = ...         
-%                         [vmm_rad2ang(vmm_nr.Mu) vmm_nr.Pcomponents' ...
-%                          vmm_nr.Kappa vmm_nr.Lambda];                            
-%             else % NR not converged
-%                 Table{r}(:,k)= NaN(5,1);
-%                 Param{r}(2:max(max(K1),max(K2))+1, (k-1)*in1+1 : k*in1) = ...
-%                         NaN(max(max(K1),max(K2)),in1);
-%             end
-%         end % Non-reducing end loop
+        for k = K1
+            if any(Mu1{k})
+                S_nr = struct('Mu',vmm_ang2rad(reshape(reshape(Mu1{k}(r,:),...
+                    [1 2 k]),[2 k])'),'Kappa',Ka1{k},'Lambda',L1{k});
+                tic
+                vmm_nr = fitvmmdist(A,k,'Options',options,'Start',S_nr,...
+                  'Cortype','Sine');
+                toc
+            else
+                error('No convergent initial guesses in disaccharides');
+            end
+            Param{r}(1,in1*(k-1) + 1 : in1*k) = vmm_nr.Ncomponents;  
+            if vmm_nr.Converged
+                Table{r}(:,k) = [vmm_nr.Ncomponents vmm_nr.AIC ...
+                                vmm_nr.BIC vmm_nr.Converged vmm_nr.Iters]';
+                    
+                Param{r}(2:size(vmm_nr.Mu,1)+1, (k-1)*in1+1 : k*in1) = ...         
+                        [vmm_rad2ang(vmm_nr.Mu) vmm_nr.Pcomponents' ...
+                         vmm_nr.Kappa vmm_nr.Lambda];                            
+            else % NR not converged
+                Table{r}(:,k) = NaN(5,1);
+                Param{r}(2:max(max(K1),max(K2))+1, (k-1)*in1+1 : k*in1) = ...
+                        NaN(max(max(K1),max(K2)),in1);
+            end
+        end % Non-reducing end loop
         % Loop for Reducing end angle fitting
-        for l = 2%K2
+        for l = K2
             if any(Mu2{l})
                 if size(B,2) < 4
                     for ii = 1 : l
@@ -217,7 +218,7 @@ for j   = M
              end % Convergency 
         end % Reducing End Loop
     end % Repeats
-    %matlabpool close;
+    matlabpool close;
     
     % Write to files
     pfile = strcat(dir,name,'_','P_',num2str(N),'_',num2str(sd(j)),'.txt');

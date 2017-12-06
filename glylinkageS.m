@@ -1,4 +1,4 @@
-function [ ] = glylinkageS(name,S,flag,seed)
+function [ ] = glylinkageS(name,flag,seed)
 % Glycosidic linkage --> Ramachandran plot (phi,psi,omega) for
 % DISACCHARIDES of Single Seed
 % Scatter plot with color indicating data density

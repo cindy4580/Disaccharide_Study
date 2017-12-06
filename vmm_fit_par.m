@@ -1,4 +1,4 @@
-function [ ] = vmm_fit_par(name,N,K,M,I,varargin) 
+function [ ] = vmm_fit_par(name,N,K,M,I,eq,varargin) 
 %% von Mises Mixture fitting starter script
 %  Initial mean directions are randomly selected within 10 degrees of the
 %  inputs; Kappa and Lambda initial guesses are fixed for all components at 
@@ -10,6 +10,7 @@ function [ ] = vmm_fit_par(name,N,K,M,I,varargin)
 %			K   -- Number of components at most
 %           M   -- Different samples from MC simulations
 %           I   -- Initial mean directions from energy surface local minima
+%           eq  -- Start point after equilibrium
 %           V1  -- s: Random number seed to generate random initial guesses
 %           V2  -- L: Resampling factor
 
@@ -24,12 +25,12 @@ s   = 27;
 if nargin == 0
 	return;
 end
-if nargin < 5
+if nargin < 6
 	error('TooFewInputs');
-elseif nargin > 6
+elseif nargin > 7
 	s = varargin{1};
     L = varargin{2};
-elseif nargin > 5
+elseif nargin > 6
     s = varargin{1};
 end
 
@@ -74,7 +75,7 @@ for j 	= M
 	A2M = load(f);
     
     % Select every Lth point in radians [-pi, pi]
-	A1	= vmm_ang2rad(A2M(1:L:end,2:p+1));
+	A1	= vmm_ang2rad(A2M(eq:L:end,2:p+1));
     clear A2M;
     matlabpool(3)    
     parfor r = 1 : N  % Repeats loop
@@ -88,10 +89,10 @@ for j 	= M
             elseif p < 3
                 S = struct('Mu', Mu_tmp(1:k,:), 'Kappa',...
                     repmat(repmat(Kap,1,p),k,1), 'Lambda',ones(k,1));
-            elseif p < 4
-                S = struct('Mu', Mu_tmp(1:k,:), 'Kappa',...
-                    repmat(repmat(Kap,1,p),k,1), 'Lambda',...
-                    repmat(lambda,[1 1 k]));
+%             elseif p < 4
+%                 S = struct('Mu', Mu_tmp(1:k,:), 'Kappa',...
+%                     repmat(repmat(Kap,1,p),k,1), 'Lambda',...
+%                     repmat(lambda,[1 1 k]));
             else
                 error('Higher deminsion is not ready yet');
             end
