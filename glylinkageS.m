@@ -1,4 +1,4 @@
-function [ ] = glylinkageS(name,flag,seed)
+function [ ] = glylinkageS(name,seed,temp,incr,flag,varargin)
 % Glycosidic linkage --> Ramachandran plot (phi,psi,omega) for
 % DISACCHARIDES of Single Seed
 % Scatter plot with color indicating data density
@@ -9,28 +9,38 @@ function [ ] = glylinkageS(name,flag,seed)
 %               2nd last column - normalized density
 %               last     column - free energy
 %               * name without its directory
-%       S     - is the number of seeds used to generate the plot
+%       seed  - Specify the random seed
+%       temp  - Simulation temperature
+%       incr  - Resampling step size
 %       flag  - file format options:
 %               1 - plot w/o omega
 %               0 - plot w/  omega
-%       seed  - Specify the seed (only for one-seed plot)
+%       V1    - start position
 % Copy-left: Xindi Li, 2014
 
 clc;	
 dir		= strcat('~/Data/dimer/',name);                    % File Directory
-diri    = strcat(dir,'/density/');
-diro    = strcat(dir,'/fig/');
-M		= load(strcat(diri,name,'.',num2str(seed),'.d.dat'));
-W		= size(M,2);	L = 1 * 1e05;							
-x		= M(1:L,2);	y = M(1:L,3);								% (Phi,Psi)
-d		= M(1:L,W - 1);											  % Density
+diri    = strcat(dir,'/DCD/MC2long/');
+diro    = strcat(dir,'/DCD/MC2long/');
+if nargin > 5
+    start = varargin{1};
+end
+M		= load(strcat(diri,name,'.',num2str(seed),'.',num2str(temp),...
+            '.start',num2str(start),'.skip',num2str(incr),'.d.dat'));
+
+W		= size(M,2);
+L       = size(M,1);
+x		= M(:,2);	y = M(:,3);								% (Phi,Psi)
+d		= M(:,W - 1);											  % Density
 dot		= M((M(:,W) == min(M(:,W))),:);				 % Lowest energy matrix
 color	= hsv(10);  colormap jet;
 xmax	= 360;	xmin = 0;
 ymax	= 360;	ymin = 0;
 xbin	= (xmin + 5) :10: (xmax - 5);	
 ybin	= (ymin + 5) :10: (ymax - 5);
-rn		= [diro,name,'.',num2str(seed),'.rama.eps'];	% Linkage Plot
+rn		= [diro,name,'.',num2str(seed),'.',num2str(temp),...
+           '.start',num2str(start),'.skip',num2str(incr),...
+           '.rama.eps'];	% Linkage Plot
 %% Specific Data Sets Parameters
 if flag
 	switch name

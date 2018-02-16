@@ -11,8 +11,9 @@ function [ ] = vmm_fit_par(name,N,K,M,I,eq,varargin)
 %           M   -- Different samples from MC simulations
 %           I   -- Initial mean directions from energy surface local minima
 %           eq  -- Start point after equilibrium
-%           V1  -- s: Random number seed to generate random initial guesses
-%           V2  -- L: Resampling factor
+%           V1  -- L: Resampling factor
+%           V2  -- s: Random number seed to generate random initial guesses
+
 
 %  NOTE: This script is modified to enable parallel computing on a multi- 
 %		 core cpu with MATLAB 2013a therefore contains outdated built-in
@@ -28,10 +29,10 @@ end
 if nargin < 6
 	error('TooFewInputs');
 elseif nargin > 7
-	s = varargin{1};
-    L = varargin{2};
+	L = varargin{1};
+    s = varargin{2};
 elseif nargin > 6
-    s = varargin{1};
+    L = varargin{1};
 end
 
 if size(I,1) ~= K
@@ -132,9 +133,9 @@ for j 	= M
         end % Components
     end % Repeats
     
-    pfile = strcat(dir,name,'_','P_',num2str(N),'_',...
+    pfile = strcat(dir,'vMM/',name,'_','P_',num2str(N),'_',...
             num2str(seed(j)),'.txt');
-    tfile = strcat(dir,name,'_','T_',num2str(N),'_',...
+    tfile = strcat(dir,'vMM/',name,'_','T_',num2str(N),'_',...
             num2str(seed(j)),'.txt');
    
     for ii = 1 :N

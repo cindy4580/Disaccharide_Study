@@ -58,7 +58,7 @@ switch method
 			dd(k) = sum(cos((x - x(k))/180 * pi) > cos(r/360 * pi) ...
                       & cos((y - y(k))/180 * pi) > cos(r/360 * pi) ...
                       & cos((z - z(k))/180 * pi) > cos(r/360 * pi) );
-		end %for
+        end %for
 		vl = r^3;
 		dd = dd/vl;
 	end %switch
